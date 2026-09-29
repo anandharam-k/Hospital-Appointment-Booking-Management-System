@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Management - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-brand">
+          <div class="brand-icon">+</div>
+          <span>MedSchedule</span>
+        </a>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+          Hospital Administration
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="admin-dashboard.html" class="sidebar-link">
+          <span>&#9638;</span>
+          <span>Dashboard Overview</span>
+        </a>
+        <a href="admin-appointments.html" class="sidebar-link active">
+          <span>&#128197;</span>
+          <span>All Appointments</span>
+        </a>
+        <a href="doctors-management.html" class="sidebar-link">
+          <span>&#9877;</span>
+          <span>Doctor Management</span>
+        </a>
+        <a href="availability.html" class="sidebar-link">
+          <span>&#9200;</span>
+          <span>Doctor Availability</span>
+        </a>
+        <a href="index.html" class="sidebar-link" target="_blank">
+          <span>&#8599;</span>
+          <span>View Patient Site</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-sm btn-block" style="color: #f87171; border-color: rgba(248,113,113,0.3);">
+          Logout Staff
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1 style="font-size: 20px; font-weight: 700; color: var(--navy);">Master Appointment Management</h1>
+          <p style="font-size: 13px; color: var(--text-muted);">Manage patient bookings, update consultation status, and reschedule appointments</p>
+        </div>
+        <div>
+          <a href="booking.html" target="_blank" class="btn btn-primary btn-sm">+ Manual OPD Booking</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div id="adminAlert"></div>
+
+        <!-- Filter & Search Controls -->
+        <div class="filter-bar" style="margin-bottom: 24px;">
+          <div class="filter-grid" style="grid-template-columns: 2fr 1.5fr 1.2fr 1.2fr auto;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="searchQuery" class="form-label">Search Patient / Appointment ID</label>
+              <input type="text" id="searchQuery" class="form-control" placeholder="Search by name, APT-ID, mobile...">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="doctorFilter" class="form-label">Filter by Doctor</label>
+              <select id="doctorFilter" class="form-control">
+                <option value="">All Doctors</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="dateFilter" class="form-label">Filter by Date</label>
+              <input type="date" id="dateFilter" class="form-control">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="statusFilter" class="form-label">Filter by Status</label>
+              <select id="statusFilter" class="form-control">
+                <option value="all">All Statuses</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Rescheduled">Rescheduled</option>
+              </select>
+            </div>
+
+            <button type="button" id="resetBtn" class="btn btn-secondary" style="height: 42px;">Reset</button>
+          </div>
+        </div>
+
+        <!-- Appointments Master Table -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div id="appointmentCount" style="font-size: 14px; font-weight: 600; color: var(--text-muted);"></div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Appointment ID</th>
+                <th>Patient Name</th>
+                <th>Contact</th>
+                <th>Doctor</th>
+                <th>Department</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Room</th>
+                <th>Status</th>
+                <th style="text-align: right;">Manage Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminAppointmentsTable">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Admin Reschedule Modal -->
+  <div class="modal-overlay" id="adminRescheduleModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Hospital Reschedule Management</h3>
+        <button type="button" class="modal-close" id="closeModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="modalAlert"></div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Rescheduling: <strong id="mReschedAptId" class="tabular-nums">--</strong> for <strong id="mReschedPatient">--</strong>
+        </p>
+
+        <div class="form-group">
+          <label for="mNewDate" class="form-label">New Appointment Date *</label>
+          <input type="date" id="mNewDate" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Available Doctor Slots *</label>
+          <div class="slots-grid" id="mSlotsGrid" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+            <!-- Slot buttons -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnSaveReschedule" disabled>Save New Slot</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', () => HospitalAPI.adminLogout());
+
+    const tableBody = document.getElementById('adminAppointmentsTable');
+    const appointmentCount = document.getElementById('appointmentCount');
+    const adminAlert = document.getElementById('adminAlert');
+
+    const searchQuery = document.getElementById('searchQuery');
+    const doctorFilter = document.getElementById('doctorFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Modal elements
+    const modal = document.getElementById('adminRescheduleModal');
+    const mReschedAptId = document.getElementById('mReschedAptId');
+    const mReschedPatient = document.getElementById('mReschedPatient');
+    const mNewDate = document.getElementById('mNewDate');
+    const mSlotsGrid = document.getElementById('mSlotsGrid');
+    const btnSaveReschedule = document.getElementById('btnSaveReschedule');
+    const modalAlert = document.getElementById('modalAlert');
+
+    let allAppointments = [];
+    let allDoctors = [];
+    let activeApt = null;
+    let selectedSlot = '';
+
+    const today = new Date().toISOString().split('T')[0];
+    mNewDate.min = today;
+
+    async function init() {
+      allDoctors = await HospitalAPI.getDoctors();
+      allDoctors.forEach(doc => {
+        const opt = document.createElement('option');
+        opt.value = doc.doctor_id;
+        opt.textContent = `${doc.doctor_name} (${doc.department})`;
+        doctorFilter.appendChild(opt);
+      });
+
+      await loadAppointments();
+    }
+
+    async function loadAppointments() {
+      tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 30px;">Loading hospital appointment records...</td></tr>`;
+      try {
+        allAppointments = await HospitalAPI.getAppointments();
+        renderAppointments();
+      } catch (e) {
+        tableBody.innerHTML = `<tr><td colspan="10" class="alert alert-error">Unable to load appointments.</td></tr>`;
+      }
+    }
+
+    function renderAppointments() {
+      const q = searchQuery.value.toLowerCase().trim();
+      const docId = doctorFilter.value;
+      const dDate = dateFilter.value;
+      const stat = statusFilter.value;
+
+      let filtered = allAppointments.filter(apt => {
+        const matchesQ = !q || 
+          apt.patient_name.toLowerCase().includes(q) ||
+          apt.appointment_id.toLowerCase().includes(q) ||
+          apt.patient_mobile.includes(q);
+        const matchesDoc = !docId || Number(apt.doctor_id) === Number(docId);
+        const matchesDate = !dDate || apt.appointment_date === dDate;
+        const matchesStatus = (stat === 'all') || (apt.status.toLowerCase() === stat.toLowerCase());
+        return matchesQ && matchesDoc && matchesDate && matchesStatus;
+      });
+
+      appointmentCount.textContent = `Displaying ${filtered.length} Appointments`;
+
+      if (filtered.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-icon">&#128197;</div>
+                <h3 style="font-size: 16px; margin-bottom: 4px;">No Appointments Found</h3>
+                <p style="font-size: 13px;">No patient records match the applied criteria.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tableBody.innerHTML = filtered.map(apt => {
+        let badgeClass = 'badge-confirmed';
+        if (apt.status === 'Pending') badgeClass = 'badge-pending';
+        if (apt.status === 'Completed') badgeClass = 'badge-completed';
+        if (apt.status === 'Cancelled') badgeClass = 'badge-cancelled';
+        if (apt.status === 'Rescheduled') badgeClass = 'badge-rescheduled';
+
+        return `
+          <tr>
+            <td class="tabular-nums" style="font-weight: 700;">${apt.appointment_id}</td>
+            <td style="font-weight: 600; color: var(--navy);">${apt.patient_name}</td>
+            <td class="tabular-nums" style="font-size: 13px;">${apt.patient_mobile}</td>
+            <td style="font-weight: 500;">${apt.doctor_name}</td>
+            <td style="color: var(--text-muted);">${apt.department}</td>
+            <td class="tabular-nums">${apt.appointment_date}</td>
+            <td class="tabular-nums">${apt.appointment_time}</td>
+            <td>${apt.room_number || 'OPD-102'}</td>
+            <td><span class="badge ${badgeClass}">${apt.status}</span></td>
+            <td style="text-align: right; white-space: nowrap;">
+              ${apt.status === 'Pending' ? `
+                <button type="button" class="btn btn-sm btn-primary action-btn" data-id="${apt.appointment_id}" data-action="Confirmed">Confirm</button>
+              ` : ''}
+              ${apt.status === 'Confirmed' || apt.status === 'Rescheduled' ? `
+                <button type="button" class="btn btn-sm btn-success action-btn" data-id="${apt.appointment_id}" data-action="Completed">Complete</button>
+              ` : ''}
+              ${apt.status !== 'Cancelled' && apt.status !== 'Completed' ? `
+                <button type="button" class="btn btn-sm btn-secondary resched-btn" data-id="${apt.appointment_id}">Reschedule</button>
+                <button type="button" class="btn btn-sm btn-danger action-btn" data-id="${apt.appointment_id}" data-action="Cancelled">Cancel</button>
+              ` : `<span style="font-size: 12px; color: var(--text-light);">-</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Attach button events
+      tableBody.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const status = btn.dataset.action;
+          try {
+            await HospitalAPI.updateAppointmentStatus(id, status);
+            adminAlert.innerHTML = `<div class="alert alert-success">Appointment ${id} status set to ${status}.</div>`;
+            loadAppointments();
+          } catch (err) {
+            adminAlert.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+          }
+        });
+      });
+
+      tableBody.querySelectorAll('.resched-btn').forEach(btn => {
+        btn.addEventListener('click', () => openRescheduleModal(btn.dataset.id));
+      });
+    }
+
+    async function openRescheduleModal(aptId) {
+      activeApt = allAppointments.find(a => a.appointment_id === aptId);
+      if (!activeApt) return;
+
+      modalAlert.innerHTML = '';
+      mReschedAptId.textContent = activeApt.appointment_id;
+      mReschedPatient.textContent = activeApt.patient_name;
+      mNewDate.value = activeApt.appointment_date;
+      selectedSlot = '';
+      btnSaveReschedule.disabled = true;
+
+      modal.classList.add('active');
+      await loadAdminModalSlots();
+    }
+
+    async function loadAdminModalSlots() {
+      mSlotsGrid.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); padding: 10px;">Checking slot availability...</div>';
+      selectedSlot = '';
+      btnSaveReschedule.disabled = true;
+
+      try {
+        const slots = await HospitalAPI.getAvailability(activeApt.doctor_id, mNewDate.value);
+        mSlotsGrid.innerHTML = '';
+
+        slots.forEach(slot => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'slot-btn' + (slot.available ? '' : ' booked');
+          btn.textContent = slot.time;
+          btn.disabled = !slot.available;
+
+          if (slot.available) {
+            btn.addEventListener('click', () => {
+              mSlotsGrid.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              selectedSlot = slot.time;
+              btnSaveReschedule.disabled = false;
+            });
+          }
+          mSlotsGrid.appendChild(btn);
+        });
+      } catch (e) {
+        mSlotsGrid.innerHTML = '<div class="alert alert-error">Unable to load slots</div>';
+      }
+    }
+
+    mNewDate.addEventListener('change', loadAdminModalSlots);
+
+    btnSaveReschedule.addEventListener('click', async () => {
+      if (!selectedSlot) return;
+      btnSaveReschedule.disabled = true;
+      btnSaveReschedule.textContent = 'Updating...';
+
+      try {
+        await HospitalAPI.updateAppointmentStatus(
+          activeApt.appointment_id,
+          'Rescheduled',
+          mNewDate.value,
+          selectedSlot
+        );
+        modal.classList.remove('active');
+        adminAlert.innerHTML = `<div class="alert alert-success">Appointment ${activeApt.appointment_id} successfully rescheduled to ${mNewDate.value} at ${selectedSlot}.</div>`;
+        loadAppointments();
+      } catch (err) {
+        modalAlert.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+      } finally {
+        btnSaveReschedule.textContent = 'Save New Slot';
+      }
+    });
+
+    document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('active'));
+    document.getElementById('cancelModalBtn').addEventListener('click', () => modal.classList.remove('active'));
+
+    searchQuery.addEventListener('input', renderAppointments);
+    doctorFilter.addEventListener('change', renderAppointments);
+    dateFilter.addEventListener('change', renderAppointments);
+    statusFilter.addEventListener('change', renderAppointments);
+    resetBtn.addEventListener('click', () => {
+      searchQuery.value = '';
+      doctorFilter.value = '';
+      dateFilter.value = '';
+      statusFilter.value = 'all';
+      renderAppointments();
+    });
+
+    init();
+  </script>
+</body>
+</html>

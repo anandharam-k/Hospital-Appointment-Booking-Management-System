@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Confirmation - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="doctors.html" class="nav-link">Find Doctors</a>
+        <a href="booking.html" class="nav-link">Book Appointment</a>
+        <a href="appointments.html" class="nav-link">My Appointments</a>
+      </nav>
+      <div class="header-actions">
+        <a href="appointments.html" class="btn btn-secondary btn-sm">My Appointments</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="confirmation-card">
+      <div class="success-icon-badge">&#10003;</div>
+      <h1 style="font-size: 26px; font-weight: 800; color: var(--navy); margin-bottom: 6px;">
+        Appointment Booked Successfully
+      </h1>
+      <p style="color: var(--text-muted); font-size: 15px;">
+        Your outpatient consultation slot is reserved in the hospital queue.
+      </p>
+
+      <div class="conf-id-badge" id="confAptId">APT-20260929-001</div>
+
+      <div class="review-box" style="text-align: left; margin: 20px 0 30px 0;">
+        <div class="review-row">
+          <span class="review-label">Patient Name:</span>
+          <span class="review-val" id="confPatientName">--</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Consulting Specialist:</span>
+          <span class="review-val" id="confDoctorName">--</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Hospital Wing & Dept:</span>
+          <span class="review-val" id="confDepartment">--</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Appointment Date:</span>
+          <span class="review-val tabular-nums" id="confDate">--</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Reserved Time Slot:</span>
+          <span class="review-val tabular-nums" id="confTime">--</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Consultation Room:</span>
+          <span class="review-val" id="confRoom">OPD-102</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Booking Status:</span>
+          <span class="badge badge-confirmed" id="confStatus">Confirmed</span>
+        </div>
+        <div class="review-row">
+          <span class="review-label">Booking Timestamp:</span>
+          <span class="review-val tabular-nums" id="confTimestamp">--</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <a href="appointments.html" class="btn btn-primary btn-lg" style="flex: 1; min-width: 180px;">View in My Appointments</a>
+          <button type="button" onclick="window.print()" class="btn btn-secondary btn-lg" style="flex: 1; min-width: 140px;">Print OPD Slip</button>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 6px;">
+          <a href="booking.html" class="btn btn-outline btn-sm">Book Another Appointment</a>
+          <button type="button" id="btnCancelApt" class="btn btn-danger btn-sm">Cancel Appointment</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    let currentApt = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const aptId = urlParams.get('appointment_id');
+
+    async function loadConfirmation() {
+      // First check session storage
+      const cached = sessionStorage.getItem('last_booked_appointment');
+      if (cached) {
+        currentApt = JSON.parse(cached);
+      }
+
+      if (!currentApt || (aptId && currentApt.appointment_id !== aptId)) {
+        const apts = await HospitalAPI.getAppointments();
+        currentApt = apts.find(a => a.appointment_id === aptId) || currentApt;
+      }
+
+      if (!currentApt) {
+        // Fallback default
+        currentApt = {
+          appointment_id: aptId || "APT-20260929-001",
+          patient_name: "Johnathan Miller",
+          doctor_name: "Dr. Arun Kumar",
+          department: "Cardiology",
+          room_number: "OPD-102",
+          appointment_date: "2026-09-29",
+          appointment_time: "09:30 AM",
+          status: "Confirmed",
+          created_at: new Date().toLocaleString()
+        };
+      }
+
+      document.getElementById('confAptId').textContent = currentApt.appointment_id;
+      document.getElementById('confPatientName').textContent = currentApt.patient_name;
+      document.getElementById('confDoctorName').textContent = currentApt.doctor_name;
+      document.getElementById('confDepartment').textContent = `${currentApt.department || 'General OPD'}`;
+      document.getElementById('confDate').textContent = currentApt.appointment_date;
+      document.getElementById('confTime').textContent = currentApt.appointment_time;
+      document.getElementById('confRoom').textContent = currentApt.room_number || 'OPD-102';
+      document.getElementById('confStatus').textContent = currentApt.status;
+      document.getElementById('confTimestamp').textContent = currentApt.created_at || new Date().toLocaleString();
+    }
+
+    document.getElementById('btnCancelApt').addEventListener('click', async () => {
+      if (!currentApt) return;
+      if (confirm(`Are you sure you want to cancel appointment ${currentApt.appointment_id}?`)) {
+        try {
+          await HospitalAPI.updateAppointmentStatus(currentApt.appointment_id, 'Cancelled');
+          alert('Appointment has been successfully cancelled.');
+          window.location.href = 'appointments.html';
+        } catch (e) {
+          alert(e.message);
+        }
+      }
+    });
+
+    loadConfirmation();
+  </script>
+</body>
+</html>

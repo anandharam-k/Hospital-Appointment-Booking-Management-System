@@ -1,0 +1,6 @@
+{
+  "name": "MedSchedule - Hospital Appointment Booking System",
+  "description": "Professional Hospital Appointment Booking & Management System designed to eliminate appointment delays with real-time doctor availability and scheduling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

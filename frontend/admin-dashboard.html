@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Management Dashboard - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <div class="admin-layout">
+    <!-- Hospital Management Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-brand">
+          <div class="brand-icon">+</div>
+          <span>MedSchedule</span>
+        </a>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+          Hospital Administration
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="admin-dashboard.html" class="sidebar-link active">
+          <span>&#9638;</span>
+          <span>Dashboard Overview</span>
+        </a>
+        <a href="admin-appointments.html" class="sidebar-link">
+          <span>&#128197;</span>
+          <span>All Appointments</span>
+        </a>
+        <a href="doctors-management.html" class="sidebar-link">
+          <span>&#9877;</span>
+          <span>Doctor Management</span>
+        </a>
+        <a href="availability.html" class="sidebar-link">
+          <span>&#9200;</span>
+          <span>Doctor Availability</span>
+        </a>
+        <a href="index.html" class="sidebar-link" target="_blank">
+          <span>&#8599;</span>
+          <span>View Patient Site</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div style="font-size: 12px; color: #cbd5e1; margin-bottom: 8px;" id="adminStaffName">Dr. Sarah Mitchell</div>
+        <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-sm btn-block" style="color: #f87171; border-color: rgba(248,113,113,0.3);">
+          Logout Staff
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1 style="font-size: 20px; font-weight: 700; color: var(--navy);">Hospital Outpatient Dashboard</h1>
+          <div style="font-size: 13px; color: var(--text-muted);" id="currentDateDisplay">--</div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <a href="admin-appointments.html" class="btn btn-primary btn-sm">+ Manage Appointments</a>
+          <a href="availability.html" class="btn btn-secondary btn-sm">Set Doctor Shifts</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div id="dashAlert"></div>
+
+        <!-- 5 Summary Metrics Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Today's Total</div>
+            <div class="metric-value" id="statToday">--</div>
+            <div class="metric-sub">Scheduled for Today</div>
+          </div>
+
+          <div class="metric-card" style="border-top: 3px solid var(--status-pending);">
+            <div class="metric-title">Pending</div>
+            <div class="metric-value" id="statPending" style="color: var(--status-pending);">--</div>
+            <div class="metric-sub">Awaiting confirmation</div>
+          </div>
+
+          <div class="metric-card" style="border-top: 3px solid var(--status-confirmed);">
+            <div class="metric-title">Confirmed</div>
+            <div class="metric-value" id="statConfirmed" style="color: var(--status-confirmed);">--</div>
+            <div class="metric-sub">Reserved OPD slots</div>
+          </div>
+
+          <div class="metric-card" style="border-top: 3px solid var(--status-completed);">
+            <div class="metric-title">Completed</div>
+            <div class="metric-value" id="statCompleted" style="color: var(--status-completed);">--</div>
+            <div class="metric-sub">Consultations fulfilled</div>
+          </div>
+
+          <div class="metric-card" style="border-top: 3px solid var(--status-cancelled);">
+            <div class="metric-title">Cancelled</div>
+            <div class="metric-value" id="statCancelled" style="color: var(--status-cancelled);">--</div>
+            <div class="metric-sub">Released time slots</div>
+          </div>
+        </div>
+
+        <!-- Today's Schedule Table -->
+        <div class="card" style="padding: 24px; margin-bottom: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h2 style="font-size: 18px; font-weight: 700; color: var(--navy);">Today's Outpatient Schedule</h2>
+              <p style="font-size: 13px; color: var(--text-muted);">Real-time queue tracking and patient attendance confirmation</p>
+            </div>
+            <a href="admin-appointments.html" class="btn btn-secondary btn-sm">View Full Register &rarr;</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Appointment ID</th>
+                  <th>Patient Name</th>
+                  <th>Mobile</th>
+                  <th>Doctor</th>
+                  <th>Department</th>
+                  <th>Time Slot</th>
+                  <th>Room</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Status Action</th>
+                </tr>
+              </thead>
+              <tbody id="todayScheduleTableBody">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Quick Availability Overview -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <div class="card" style="padding: 24px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 12px;">Active Medical Faculty</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Specialists currently on duty across outpatient wings.</p>
+            <div id="facultyListSummary"></div>
+          </div>
+
+          <div class="card" style="padding: 24px;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 12px;">Queue Delay Prevention</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">OPD performance policies enforced by MedSchedule:</p>
+            <ul style="font-size: 13px; color: var(--text-main); padding-left: 20px; line-height: 1.8;">
+              <li>Strict 30-minute allocation per consultation slot</li>
+              <li>Instant database locking prevents patient double-booking</li>
+              <li>Real-time slot release upon patient cancellation</li>
+              <li>Direct room assignment reduces registration lobby congestion</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    // Verify staff login
+    let user = HospitalAPI.getCurrentUser();
+    if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
+      // Default to demo admin for demonstration
+      user = { user_id: 1, full_name: "Dr. Sarah Mitchell (Staff Admin)", email: "admin@metrohealth.org", role: "admin" };
+      HospitalAPI.setCurrentUser(user);
+    }
+
+    document.getElementById('adminStaffName').textContent = user.full_name;
+    document.getElementById('adminLogoutBtn').addEventListener('click', () => HospitalAPI.adminLogout());
+
+    const todayDate = new Date();
+    document.getElementById('currentDateDisplay').textContent = todayDate.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const dashAlert = document.getElementById('dashAlert');
+
+    async function loadDashboard() {
+      try {
+        const { stats, todaySchedule, todayDate } = await HospitalAPI.getDashboardStats();
+
+        document.getElementById('statToday').textContent = stats.today;
+        document.getElementById('statPending').textContent = stats.pending;
+        document.getElementById('statConfirmed').textContent = stats.confirmed;
+        document.getElementById('statCompleted').textContent = stats.completed;
+        document.getElementById('statCancelled').textContent = stats.cancelled;
+
+        renderTodaySchedule(todaySchedule);
+        loadFacultySummary();
+      } catch (e) {
+        dashAlert.innerHTML = `<div class="alert alert-error">Error loading dashboard statistics.</div>`;
+      }
+    }
+
+    function renderTodaySchedule(schedule) {
+      const tbody = document.getElementById('todayScheduleTableBody');
+      if (!schedule || schedule.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 30px; color: var(--text-muted);">
+              No appointments scheduled for today yet.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = schedule.map(apt => {
+        let badgeClass = 'badge-confirmed';
+        if (apt.status === 'Pending') badgeClass = 'badge-pending';
+        if (apt.status === 'Completed') badgeClass = 'badge-completed';
+        if (apt.status === 'Cancelled') badgeClass = 'badge-cancelled';
+        if (apt.status === 'Rescheduled') badgeClass = 'badge-rescheduled';
+
+        return `
+          <tr>
+            <td class="tabular-nums" style="font-weight: 700;">${apt.appointment_id}</td>
+            <td style="font-weight: 600; color: var(--navy);">${apt.patient_name}</td>
+            <td class="tabular-nums" style="font-size: 13px;">${apt.patient_mobile}</td>
+            <td style="font-weight: 500;">${apt.doctor_name}</td>
+            <td style="color: var(--text-muted);">${apt.department}</td>
+            <td class="tabular-nums">${apt.appointment_time}</td>
+            <td>${apt.room_number || 'OPD-102'}</td>
+            <td><span class="badge ${badgeClass}">${apt.status}</span></td>
+            <td style="text-align: right; white-space: nowrap;">
+              ${apt.status === 'Confirmed' ? `
+                <button type="button" class="btn btn-sm btn-success mark-btn" data-id="${apt.appointment_id}" data-action="Completed">Mark Completed</button>
+              ` : ''}
+              ${apt.status === 'Pending' ? `
+                <button type="button" class="btn btn-sm btn-primary mark-btn" data-id="${apt.appointment_id}" data-action="Confirmed">Confirm</button>
+              ` : ''}
+              ${apt.status !== 'Cancelled' && apt.status !== 'Completed' ? `
+                <button type="button" class="btn btn-sm btn-danger mark-btn" data-id="${apt.appointment_id}" data-action="Cancelled">Cancel</button>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('.mark-btn').forEach(b => {
+        b.addEventListener('click', async () => {
+          const id = b.dataset.id;
+          const status = b.dataset.action;
+          try {
+            await HospitalAPI.updateAppointmentStatus(id, status);
+            dashAlert.innerHTML = `<div class="alert alert-success">Appointment ${id} status updated to ${status}.</div>`;
+            loadDashboard();
+          } catch (err) {
+            dashAlert.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+          }
+        });
+      });
+    }
+
+    async function loadFacultySummary() {
+      const container = document.getElementById('facultyListSummary');
+      const docs = await HospitalAPI.getDoctors();
+      container.innerHTML = docs.slice(0, 4).map(d => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+          <div>
+            <span style="font-weight: 600; color: var(--navy);">${d.doctor_name}</span>
+            <span style="color: var(--text-muted);"> (${d.department})</span>
+          </div>
+          <span class="badge badge-confirmed">Active · ${d.room_number || 'OPD-101'}</span>
+        </div>
+      `).join('') + `
+        <div style="margin-top: 12px; text-align: right;">
+          <a href="doctors-management.html" style="font-size: 13px; font-weight: 600;">Manage All Doctors &rarr;</a>
+        </div>
+      `;
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

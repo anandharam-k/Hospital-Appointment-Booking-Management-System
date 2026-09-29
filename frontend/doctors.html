@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Doctors & OPD Schedules - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="doctors.html" class="nav-link active">Find Doctors</a>
+        <a href="booking.html" class="nav-link">Book Appointment</a>
+        <a href="appointments.html" class="nav-link">My Appointments</a>
+        <a href="admin-dashboard.html" class="nav-link">Hospital Portal</a>
+      </nav>
+      <div class="header-actions" id="userArea">
+        <a href="login.html" class="btn btn-secondary btn-sm">Patient Login</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="margin-top: 36px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 24px;">
+      <h1 class="section-title">Find Hospital Specialist & Doctors</h1>
+      <p class="section-subtitle">Search certified clinicians, check available OPD days, and book direct appointments</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="filter-grid">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="searchName" class="form-label">Search Doctor Name</label>
+          <input type="text" id="searchName" class="form-control" placeholder="e.g. Dr. Arun Kumar, Dr. Priya...">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="deptFilter" class="form-label">Hospital Department</label>
+          <select id="deptFilter" class="form-control">
+            <option value="">All Departments</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Orthopedics">Orthopedics</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Pediatrics">Pediatrics</option>
+            <option value="General Medicine">General Medicine</option>
+            <option value="Oncology">Oncology</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="dateFilter" class="form-label">Consultation Date</label>
+          <input type="date" id="dateFilter" class="form-control">
+        </div>
+
+        <button type="button" id="resetBtn" class="btn btn-secondary" style="height: 42px;">Reset Filters</button>
+      </div>
+    </div>
+
+    <!-- Active Doctor Cards Grid -->
+    <div id="doctorCount" style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px;"></div>
+    <div class="doctors-grid" id="doctorsContainer">
+      <!-- Injected by JavaScript -->
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div style="font-size: 13px;">&copy; 2026 ApexCare Hospital. Dedicated strictly to outpatient appointment management.</div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="booking.html">Book Appointment</a>
+        <a href="admin-login.html">Hospital Staff</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    // Set user header
+    const user = HospitalAPI.getCurrentUser();
+    if (user) {
+      document.getElementById('userArea').innerHTML = `
+        <span style="font-size: 13px; font-weight: 600; color: var(--navy); margin-right: 8px;">${user.full_name}</span>
+        <a href="appointments.html" class="btn btn-secondary btn-sm">My Appointments</a>
+      `;
+    }
+
+    const doctorsContainer = document.getElementById('doctorsContainer');
+    const doctorCount = document.getElementById('doctorCount');
+    const searchName = document.getElementById('searchName');
+    const deptFilter = document.getElementById('deptFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Default date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateFilter.min = today;
+    dateFilter.value = today;
+
+    let allDoctors = [];
+
+    async function loadDoctors() {
+      doctorsContainer.innerHTML = `<div class="empty-state">Loading active hospital specialists...</div>`;
+      try {
+        allDoctors = await HospitalAPI.getDoctors();
+        renderDoctors();
+      } catch (err) {
+        doctorsContainer.innerHTML = `<div class="alert alert-error">Unable to load doctors. Please refresh.</div>`;
+      }
+    }
+
+    function renderDoctors() {
+      const q = searchName.value.toLowerCase().trim();
+      const dept = deptFilter.value;
+
+      let filtered = allDoctors.filter(d => {
+        const matchesName = d.doctor_name.toLowerCase().includes(q) || d.specialization.toLowerCase().includes(q);
+        const matchesDept = !dept || d.department.toLowerCase() === dept.toLowerCase();
+        return matchesName && matchesDept;
+      });
+
+      doctorCount.textContent = `Showing ${filtered.length} Available Doctors`;
+
+      if (filtered.length === 0) {
+        doctorsContainer.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">&#129658;</div>
+            <h3>No Doctors Found</h3>
+            <p>Try clearing your filters to see specialists in other departments.</p>
+          </div>
+        `;
+        return;
+      }
+
+      doctorsContainer.innerHTML = filtered.map(doc => {
+        const initials = doc.doctor_name.replace('Dr. ', '').split(' ').map(n => n[0]).join('');
+        return `
+          <div class="doctor-card">
+            <div>
+              <div class="doctor-header">
+                <div class="doctor-avatar">${initials}</div>
+                <div>
+                  <h3 class="doctor-name">${doc.doctor_name}</h3>
+                  <div class="doctor-spec">${doc.specialization}</div>
+                  <div class="doctor-dept">${doc.department} · Room ${doc.room_number || 'OPD-102'}</div>
+                </div>
+              </div>
+
+              <div class="doctor-details-list">
+                <div class="doctor-detail-row">
+                  <span class="doctor-detail-label">Experience:</span>
+                  <span class="doctor-detail-val">${doc.experience_years} Years Clinical</span>
+                </div>
+                <div class="doctor-detail-row">
+                  <span class="doctor-detail-label">Available Days:</span>
+                  <span class="doctor-detail-val">${doc.available_days}</span>
+                </div>
+                <div class="doctor-detail-row">
+                  <span class="doctor-detail-label">Consultation Hours:</span>
+                  <span class="doctor-detail-val tabular-nums">09:00 AM – 01:00 PM · 04:00 PM – 07:00 PM</span>
+                </div>
+              </div>
+            </div>
+
+            <a href="booking.html?doctor_id=${doc.doctor_id}&date=${dateFilter.value}" class="btn btn-primary btn-block">
+              Book Appointment with Dr. ${doc.doctor_name.replace('Dr. ', '')}
+            </a>
+          </div>
+        `;
+      }).join('');
+    }
+
+    searchName.addEventListener('input', renderDoctors);
+    deptFilter.addEventListener('change', renderDoctors);
+    dateFilter.addEventListener('change', renderDoctors);
+    resetBtn.addEventListener('click', () => {
+      searchName.value = '';
+      deptFilter.value = '';
+      dateFilter.value = today;
+      renderDoctors();
+    });
+
+    loadDoctors();
+  </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedSchedule - Hospital Appointment Booking System</title>
+  <meta name="description" content="Professional Hospital Appointment Booking Management System. Faster appointments, zero queue delays, and real-time doctor availability.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="doctors.html" class="nav-link">Find Doctors</a>
+        <a href="booking.html" class="nav-link">Book Appointment</a>
+        <a href="appointments.html" class="nav-link">My Appointments</a>
+        <a href="admin-dashboard.html" class="nav-link">Hospital Portal</a>
+      </nav>
+
+      <div class="header-actions" id="authNavButtons">
+        <a href="login.html" class="btn btn-secondary btn-sm">Patient Login</a>
+        <a href="booking.html" class="btn btn-primary btn-sm">Book Appointment</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-pill">
+        <span>Instant Clinical Scheduling</span>
+        <span aria-hidden="true">·</span>
+        <span>Zero OPD Delays</span>
+      </div>
+      <h1 class="hero-title">
+        Faster Hospital Care.<br>
+        <span>Zero Appointment Delays.</span>
+      </h1>
+      <p class="hero-desc">
+        Streamlined outpatient appointment scheduling for patients and hospital clinicians.
+        Check real-time specialist availability, select confirmed time slots, and eliminate hospital waiting lines.
+      </p>
+      <div class="hero-cta">
+        <a href="booking.html" class="btn btn-primary btn-lg">Book Appointment Now</a>
+        <a href="doctors.html" class="btn btn-secondary btn-lg">Find Doctors & Schedules</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3-Step Simple Booking Process -->
+  <section class="steps-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Simple 3-Step Booking Process</h2>
+        <p class="section-subtitle">Complete your confirmed hospital booking in under 60 seconds</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Select Doctor</h3>
+          <p>Search by medical department, specialization, and clinical experience across our certified hospital faculty.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Select Date & Time</h3>
+          <p>View live calendar availability and pick an open 30-minute consultation slot. Booked slots are locked in real-time.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Confirm Appointment</h3>
+          <p>Receive your instant Appointment ID (e.g. APT-20260929-001) for direct queue-free OPD admission.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hospital Information Bar -->
+  <section class="info-bar">
+    <div class="container">
+      <div class="section-header" style="margin-bottom: 24px;">
+        <h2 class="section-title">ApexCare Central Hospital</h2>
+        <p class="section-subtitle">Serving over 1,200 outpatients daily with advanced clinical departments</p>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-item-label">Hospital Location</div>
+          <div class="info-item-val">450 Healthcare Boulevard</div>
+          <div class="info-item-sub">Medical District, Central OPD Wing</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-item-label">Central Appointment Desk</div>
+          <div class="info-item-val tabular-nums">+1 (800) 555-0199</div>
+          <div class="info-item-sub">Mon – Sat: 08:00 AM – 08:00 PM</div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-item-label">Hospital Departments</div>
+          <div class="info-item-val">6 Specialized Wings</div>
+          <div class="info-item-sub">Cardiology, Orthopedics, Neurology, Pediatrics, General Medicine, Oncology</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+          <div style="font-weight: 700; color: #fff; font-size: 17px; margin-bottom: 4px;">MedSchedule Hospital Appointment System</div>
+          <p style="font-size: 13px;">Dedicated strictly to outpatient scheduling and queue delay reduction.</p>
+        </div>
+        <div>
+          <a href="admin-login.html" class="btn btn-secondary btn-sm" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff;">Staff & Admin Login</a>
+        </div>
+      </div>
+      <div class="footer-inner">
+        <div style="font-size: 13px;">&copy; 2026 ApexCare Hospital. All rights reserved.</div>
+        <div class="footer-links">
+          <a href="doctors.html">Doctors</a>
+          <a href="booking.html">Book Slot</a>
+          <a href="appointments.html">My Appointments</a>
+          <a href="admin-dashboard.html">Management Portal</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+    const user = HospitalAPI.getCurrentUser();
+    const navActions = document.getElementById('authNavButtons');
+    if (user && user.role === 'patient') {
+      navActions.innerHTML = `
+        <span style="font-size: 13px; font-weight: 600; color: var(--navy);">${user.full_name}</span>
+        <a href="appointments.html" class="btn btn-secondary btn-sm">My Appointments</a>
+        <button id="logoutBtn" class="btn btn-outline btn-sm">Logout</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => HospitalAPI.logout());
+    } else if (user && user.role === 'admin') {
+      navActions.innerHTML = `
+        <span style="font-size: 13px; font-weight: 600; color: var(--navy);">${user.full_name}</span>
+        <a href="admin-dashboard.html" class="btn btn-primary btn-sm">Admin Dashboard</a>
+        <button id="logoutBtn" class="btn btn-outline btn-sm">Logout</button>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => HospitalAPI.adminLogout());
+    }
+  </script>
+</body>
+</html>

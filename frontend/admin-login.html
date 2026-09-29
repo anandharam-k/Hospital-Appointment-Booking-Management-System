@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Staff Portal Login - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="background: #091a2b;">
+
+  <div class="auth-wrapper" style="margin-top: 80px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="index.html" class="brand-logo" style="justify-content: center; color: #fff;">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule Management</span>
+      </a>
+      <p style="color: #94a3b8; font-size: 14px; margin-top: 6px;">Hospital Staff & Outpatient Department Administration</p>
+    </div>
+
+    <div class="card" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+      <div class="card-header">
+        <h1 class="card-title">Staff Authentication</h1>
+        <p class="card-desc">Sign in with authorized hospital management credentials</p>
+      </div>
+
+      <div id="alertBox"></div>
+
+      <!-- Quick Demo Staff Credentials -->
+      <div class="demo-creds">
+        <div class="demo-creds-title">Demo Hospital Staff Credentials:</div>
+        <div>Staff Email: <strong class="tabular-nums">admin@metrohealth.org</strong></div>
+        <div>Password: <strong class="tabular-nums">admin123</strong></div>
+        <button type="button" id="fillAdminDemoBtn" class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;">Auto-Fill Staff Credentials</button>
+      </div>
+
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label for="adminEmail" class="form-label">Hospital Staff Email *</label>
+          <input type="email" id="adminEmail" class="form-control" placeholder="admin@metrohealth.org" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="adminPassword" class="form-label">Security Password *</label>
+          <input type="password" id="adminPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg" style="margin-top: 8px;">Access Hospital Dashboard</button>
+      </form>
+
+      <div style="margin-top: 24px; text-align: center; font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px;">
+        <a href="login.html" style="color: var(--text-muted);">&larr; Return to Patient Portal</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    const loginForm = document.getElementById('adminLoginForm');
+    const alertBox = document.getElementById('alertBox');
+    const fillAdminDemoBtn = document.getElementById('fillAdminDemoBtn');
+
+    fillAdminDemoBtn.addEventListener('click', () => {
+      document.getElementById('adminEmail').value = 'admin@metrohealth.org';
+      document.getElementById('adminPassword').value = 'admin123';
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.innerHTML = '';
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      const submitBtn = document.getElementById('submitBtn');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authenticating Hospital Staff...';
+
+      try {
+        const res = await HospitalAPI.adminLogin(email, password);
+        alertBox.innerHTML = `<div class="alert alert-success">Authentication verified. Loading dashboard...</div>`;
+        setTimeout(() => {
+          window.location.href = 'admin-dashboard.html';
+        }, 600);
+      } catch (err) {
+        alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Access Hospital Dashboard';
+      }
+    });
+  </script>
+</body>
+</html>

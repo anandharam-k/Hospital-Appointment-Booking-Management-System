@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Hospital Appointment - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="doctors.html" class="nav-link">Find Doctors</a>
+        <a href="booking.html" class="nav-link active">Book Appointment</a>
+        <a href="appointments.html" class="nav-link">My Appointments</a>
+      </nav>
+      <div class="header-actions" id="userArea">
+        <a href="login.html" class="btn btn-secondary btn-sm">Patient Login</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container-narrow" style="margin-top: 36px;">
+    <div class="section-header" style="text-align: left; margin-bottom: 24px;">
+      <h1 class="section-title">Schedule Doctor Consultation</h1>
+      <p class="section-subtitle">Real-time slot reservation to eliminate OPD waiting queues</p>
+    </div>
+
+    <!-- Booking Wizard Container -->
+    <div class="booking-wizard">
+      <!-- Step Indicator Bar -->
+      <div class="wizard-steps">
+        <div class="wizard-step active" id="stepIndicator1">
+          <div class="step-circle">1</div>
+          <span class="step-label">Doctor</span>
+        </div>
+        <div class="wizard-step" id="stepIndicator2">
+          <div class="step-circle">2</div>
+          <span class="step-label">Date</span>
+        </div>
+        <div class="wizard-step" id="stepIndicator3">
+          <div class="step-circle">3</div>
+          <span class="step-label">Time Slot</span>
+        </div>
+        <div class="wizard-step" id="stepIndicator4">
+          <div class="step-circle">4</div>
+          <span class="step-label">Patient</span>
+        </div>
+        <div class="wizard-step" id="stepIndicator5">
+          <div class="step-circle">5</div>
+          <span class="step-label">Confirm</span>
+        </div>
+      </div>
+
+      <div id="bookingAlert"></div>
+
+      <!-- STEP 1: Select Doctor -->
+      <section id="step1" class="wizard-panel">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 16px;">Step 1: Choose Your Doctor & Department</h2>
+        <div class="form-group">
+          <label for="doctorSelect" class="form-label">Available Hospital Specialists *</label>
+          <select id="doctorSelect" class="form-control" style="font-size: 15px; padding: 12px;">
+            <option value="">Select a Specialist...</option>
+          </select>
+        </div>
+
+        <div id="selectedDoctorSummary" style="display: none; background: var(--bg-subtle); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 24px;">
+          <!-- Injected info -->
+        </div>
+
+        <button type="button" id="btnToStep2" class="btn btn-primary btn-lg" style="margin-top: 10px;" disabled>
+          Continue to Select Date &rarr;
+        </button>
+      </section>
+
+      <!-- STEP 2: Select Date -->
+      <section id="step2" class="wizard-panel" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 16px;">Step 2: Select Consultation Date</h2>
+        <div class="form-group">
+          <label for="appointmentDate" class="form-label">Consultation Date *</label>
+          <input type="date" id="appointmentDate" class="form-control" style="padding: 12px; font-size: 15px;">
+          <div class="form-help">Appointments are open for the next 30 days.</div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="button" id="btnBackToStep1" class="btn btn-secondary btn-lg">&larr; Back</button>
+          <button type="button" id="btnToStep3" class="btn btn-primary btn-lg">View Available Time Slots &rarr;</button>
+        </div>
+      </section>
+
+      <!-- STEP 3: Select Available Time Slot -->
+      <section id="step3" class="wizard-panel" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px;">Step 3: Choose Consultation Time Slot</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+          Slots are allocated strictly per patient. Unavailable/booked slots are disabled in real-time.
+        </p>
+
+        <div class="slots-container">
+          <div id="slotsLoading" style="padding: 24px; text-align: center; color: var(--text-muted); display: none;">
+            Checking live slot availability from hospital database...
+          </div>
+          <div class="slots-grid" id="slotsGrid">
+            <!-- Slot buttons rendered here -->
+          </div>
+
+          <div class="slot-legend">
+            <div class="legend-item">
+              <span class="legend-dot legend-available"></span>
+              <span>Available</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot legend-selected"></span>
+              <span>Selected</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot legend-booked"></span>
+              <span>Unavailable / Booked</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 28px;">
+          <button type="button" id="btnBackToStep2" class="btn btn-secondary btn-lg">&larr; Back</button>
+          <button type="button" id="btnToStep4" class="btn btn-primary btn-lg" disabled>Enter Patient Details &rarr;</button>
+        </div>
+      </section>
+
+      <!-- STEP 4: Patient Details -->
+      <section id="step4" class="wizard-panel" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 16px;">Step 4: Patient Consultation Details</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="patientName" class="form-label">Patient Full Name *</label>
+            <input type="text" id="patientName" class="form-control" placeholder="Patient's legal name" required>
+          </div>
+          <div class="form-group">
+            <label for="patientMobile" class="form-label">Contact Mobile Number *</label>
+            <input type="tel" id="patientMobile" class="form-control" placeholder="+1 (555) 000-0000" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="consultationReason" class="form-label">Reason for Consultation / Symptoms</label>
+          <textarea id="consultationReason" class="form-control" rows="3" placeholder="e.g. Routine cardiovascular checkup, joint pain for 2 weeks, follow-up evaluation..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="button" id="btnBackToStep3" class="btn btn-secondary btn-lg">&larr; Back</button>
+          <button type="button" id="btnToStep5" class="btn btn-primary btn-lg">Review & Confirm &rarr;</button>
+        </div>
+      </section>
+
+      <!-- STEP 5: Confirm Appointment -->
+      <section id="step5" class="wizard-panel" style="display: none;">
+        <h2 style="font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 16px;">Step 5: Final Appointment Confirmation</h2>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+          Please verify your booking details below before generating your appointment pass.
+        </p>
+
+        <div class="review-box">
+          <div class="review-row">
+            <span class="review-label">Hospital:</span>
+            <span class="review-val">ApexCare Central Hospital</span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Specialist Doctor:</span>
+            <span class="review-val" id="revDoctor"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Department:</span>
+            <span class="review-val" id="revDept"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Consultation Date:</span>
+            <span class="review-val tabular-nums" id="revDate"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Confirmed Time Slot:</span>
+            <span class="review-val tabular-nums" id="revTime"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Patient Name:</span>
+            <span class="review-val" id="revPatient"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Mobile:</span>
+            <span class="review-val tabular-nums" id="revMobile"></span>
+          </div>
+          <div class="review-row">
+            <span class="review-label">Reason:</span>
+            <span class="review-val" id="revReason"></span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="button" id="btnBackToStep4" class="btn btn-secondary btn-lg">&larr; Edit Details</button>
+          <button type="button" id="btnConfirmBooking" class="btn btn-success btn-lg" style="flex: 1;">
+            Confirm & Generate Appointment Pass
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    // State
+    const user = HospitalAPI.getCurrentUser();
+    let selectedDoctor = null;
+    let selectedDate = '';
+    let selectedTimeSlot = '';
+    let allDoctors = [];
+
+    // Header sync
+    if (user) {
+      document.getElementById('userArea').innerHTML = `
+        <span style="font-size: 13px; font-weight: 600; color: var(--navy); margin-right: 8px;">${user.full_name}</span>
+        <a href="appointments.html" class="btn btn-secondary btn-sm">My Appointments</a>
+      `;
+      document.getElementById('patientName').value = user.full_name || '';
+      document.getElementById('patientMobile').value = user.mobile || '';
+    }
+
+    // Step Navigators
+    function setStep(stepNum) {
+      for (let i = 1; i <= 5; i++) {
+        const panel = document.getElementById(`step${i}`);
+        const indicator = document.getElementById(`stepIndicator${i}`);
+        if (i === stepNum) {
+          panel.style.display = 'block';
+          indicator.className = 'wizard-step active';
+        } else if (i < stepNum) {
+          panel.style.display = 'none';
+          indicator.className = 'wizard-step completed';
+        } else {
+          panel.style.display = 'none';
+          indicator.className = 'wizard-step';
+        }
+      }
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+
+    // Initialize date picker
+    const today = new Date().toISOString().split('T')[0];
+    const appointmentDateInput = document.getElementById('appointmentDate');
+    appointmentDateInput.min = today;
+    appointmentDateInput.value = today;
+    selectedDate = today;
+
+    // Load Doctors
+    async function init() {
+      allDoctors = await HospitalAPI.getDoctors();
+      const doctorSelect = document.getElementById('doctorSelect');
+
+      allDoctors.forEach(doc => {
+        const opt = document.createElement('option');
+        opt.value = doc.doctor_id;
+        opt.textContent = `${doc.doctor_name} (${doc.department} - ${doc.specialization})`;
+        doctorSelect.appendChild(opt);
+      });
+
+      // Check URL query parameters (?doctor_id=...&date=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramDocId = urlParams.get('doctor_id');
+      const paramDate = urlParams.get('date');
+
+      if (paramDate && paramDate >= today) {
+        appointmentDateInput.value = paramDate;
+        selectedDate = paramDate;
+      }
+
+      if (paramDocId) {
+        doctorSelect.value = paramDocId;
+        onDoctorChange(paramDocId);
+      }
+    }
+
+    function onDoctorChange(docId) {
+      selectedDoctor = allDoctors.find(d => Number(d.doctor_id) === Number(docId));
+      const summary = document.getElementById('selectedDoctorSummary');
+      const btnToStep2 = document.getElementById('btnToStep2');
+
+      if (selectedDoctor) {
+        summary.style.display = 'block';
+        summary.innerHTML = `
+          <div style="font-weight: 700; color: var(--navy); font-size: 16px;">${selectedDoctor.doctor_name}</div>
+          <div style="color: var(--primary); font-size: 13px; font-weight: 600;">${selectedDoctor.specialization} · Department of ${selectedDoctor.department}</div>
+          <div style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Experience: ${selectedDoctor.experience_years} Years · Room: ${selectedDoctor.room_number || 'OPD-101'} · Available: ${selectedDoctor.available_days}</div>
+        `;
+        btnToStep2.disabled = false;
+      } else {
+        summary.style.display = 'none';
+        btnToStep2.disabled = true;
+      }
+    }
+
+    document.getElementById('doctorSelect').addEventListener('change', (e) => {
+      onDoctorChange(e.target.value);
+    });
+
+    // Step 1 -> 2
+    document.getElementById('btnToStep2').addEventListener('click', () => {
+      if (!selectedDoctor) return;
+      setStep(2);
+    });
+
+    // Step 2 -> 1
+    document.getElementById('btnBackToStep1').addEventListener('click', () => setStep(1));
+
+    // Step 2 -> 3: Load Slots
+    document.getElementById('btnToStep3').addEventListener('click', async () => {
+      selectedDate = appointmentDateInput.value;
+      if (!selectedDate) {
+        alert('Please choose a valid consultation date');
+        return;
+      }
+      setStep(3);
+      await loadSlots();
+    });
+
+    async function loadSlots() {
+      const grid = document.getElementById('slotsGrid');
+      const loading = document.getElementById('slotsLoading');
+      const btnToStep4 = document.getElementById('btnToStep4');
+
+      grid.innerHTML = '';
+      loading.style.display = 'block';
+      btnToStep4.disabled = true;
+      selectedTimeSlot = '';
+
+      try {
+        const slots = await HospitalAPI.getAvailability(selectedDoctor.doctor_id, selectedDate);
+        loading.style.display = 'none';
+
+        if (!slots || slots.length === 0) {
+          grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">No slots available for this doctor on selected date.</div>`;
+          return;
+        }
+
+        slots.forEach(slot => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'slot-btn' + (slot.available ? '' : ' booked');
+          btn.textContent = slot.time;
+          btn.disabled = !slot.available;
+          if (!slot.available) {
+            btn.title = 'Slot Already Booked';
+          }
+
+          if (slot.available) {
+            btn.addEventListener('click', () => {
+              document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+              btn.classList.add('selected');
+              selectedTimeSlot = slot.time;
+              btnToStep4.disabled = false;
+            });
+          }
+
+          grid.appendChild(btn);
+        });
+      } catch (e) {
+        loading.style.display = 'none';
+        grid.innerHTML = `<div class="alert alert-error">Unable to fetch slots. Please retry.</div>`;
+      }
+    }
+
+    // Step 3 -> 2
+    document.getElementById('btnBackToStep2').addEventListener('click', () => setStep(2));
+
+    // Step 3 -> 4
+    document.getElementById('btnToStep4').addEventListener('click', () => {
+      if (!selectedTimeSlot) return;
+      setStep(4);
+    });
+
+    // Step 4 -> 3
+    document.getElementById('btnBackToStep3').addEventListener('click', () => setStep(3));
+
+    // Step 4 -> 5: Populate review
+    document.getElementById('btnToStep5').addEventListener('click', () => {
+      const pName = document.getElementById('patientName').value.trim();
+      const pMobile = document.getElementById('patientMobile').value.trim();
+      const reason = document.getElementById('consultationReason').value.trim() || 'General Consultation';
+
+      if (!pName || !pMobile) {
+        alert('Please enter patient full name and contact mobile number');
+        return;
+      }
+
+      document.getElementById('revDoctor').textContent = selectedDoctor.doctor_name;
+      document.getElementById('revDept').textContent = selectedDoctor.department;
+      document.getElementById('revDate').textContent = selectedDate;
+      document.getElementById('revTime').textContent = selectedTimeSlot;
+      document.getElementById('revPatient').textContent = pName;
+      document.getElementById('revMobile').textContent = pMobile;
+      document.getElementById('revReason').textContent = reason;
+
+      setStep(5);
+    });
+
+    // Step 5 -> 4
+    document.getElementById('btnBackToStep4').addEventListener('click', () => setStep(4));
+
+    // Step 5: Final Submission (With Duplicate Slot Prevention)
+    document.getElementById('btnConfirmBooking').addEventListener('click', async () => {
+      const btn = document.getElementById('btnConfirmBooking');
+      const bookingAlert = document.getElementById('bookingAlert');
+      bookingAlert.innerHTML = '';
+
+      btn.disabled = true;
+      btn.textContent = 'Reserving Slot & Generating Pass...';
+
+      const bookingData = {
+        user_id: user ? user.user_id : 2, // fallback to registered user Johnathan Miller if guest
+        doctor_id: selectedDoctor.doctor_id,
+        patient_name: document.getElementById('patientName').value.trim(),
+        patient_mobile: document.getElementById('patientMobile').value.trim(),
+        appointment_date: selectedDate,
+        appointment_time: selectedTimeSlot,
+        consultation_reason: document.getElementById('consultationReason').value.trim() || 'General Consultation'
+      };
+
+      try {
+        const result = await HospitalAPI.bookAppointment(bookingData);
+        sessionStorage.setItem('last_booked_appointment', JSON.stringify(result.appointment));
+        window.location.href = `confirmation.html?appointment_id=${result.appointment.appointment_id}`;
+      } catch (err) {
+        bookingAlert.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+        btn.disabled = false;
+        btn.textContent = 'Confirm & Generate Appointment Pass';
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

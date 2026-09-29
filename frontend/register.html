@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Registration - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="doctors.html" class="nav-link">Find Doctors</a>
+        <a href="booking.html" class="nav-link">Book Appointment</a>
+      </nav>
+      <div class="header-actions">
+        <a href="login.html" class="btn btn-secondary btn-sm">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="auth-wrapper" style="max-width: 580px;">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Patient Account Registration</h1>
+          <p class="card-desc">Register to book and manage doctor consultation appointments</p>
+        </div>
+
+        <div id="alertBox"></div>
+
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="full_name" class="form-label">Full Legal Name *</label>
+            <input type="text" id="full_name" class="form-control" placeholder="e.g. Johnathan Miller" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address *</label>
+              <input type="email" id="email" class="form-control" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="mobile" class="form-label">Mobile Number *</label>
+              <input type="tel" id="mobile" class="form-control" placeholder="+1 (555) 000-0000" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date_of_birth" class="form-label">Date of Birth *</label>
+              <input type="date" id="date_of_birth" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="gender" class="form-label">Gender *</label>
+              <select id="gender" class="form-control" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="password" class="form-label">Password *</label>
+              <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" minlength="6" required>
+            </div>
+            <div class="form-group">
+              <label for="confirm_password" class="form-label">Confirm Password *</label>
+              <input type="password" id="confirm_password" class="form-control" placeholder="Re-enter password" minlength="6" required>
+            </div>
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg" style="margin-top: 12px;">Create Patient Account</button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; font-size: 14px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <span>Already registered?</span>
+          <a href="login.html" style="font-weight: 600; margin-left: 4px;">Sign In Here</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    const registerForm = document.getElementById('registerForm');
+    const alertBox = document.getElementById('alertBox');
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.innerHTML = '';
+
+      const fullName = document.getElementById('full_name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const dob = document.getElementById('date_of_birth').value;
+      const gender = document.getElementById('gender').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm_password').value;
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (password !== confirmPassword) {
+        alertBox.innerHTML = `<div class="alert alert-error">Passwords do not match. Please verify.</div>`;
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registering Account...';
+
+      try {
+        const res = await HospitalAPI.register({
+          full_name: fullName,
+          email,
+          mobile,
+          date_of_birth: dob,
+          gender,
+          password
+        });
+
+        alertBox.innerHTML = `<div class="alert alert-success">Registration successful! Logging you in...</div>`;
+        HospitalAPI.setCurrentUser(res.user);
+        setTimeout(() => {
+          window.location.href = 'booking.html';
+        }, 800);
+      } catch (err) {
+        alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Patient Account';
+      }
+    });
+  </script>
+</body>
+</html>

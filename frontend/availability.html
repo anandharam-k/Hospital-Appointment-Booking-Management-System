@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Availability Management - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="admin-dashboard.html" class="sidebar-brand">
+          <div class="brand-icon">+</div>
+          <span>MedSchedule</span>
+        </a>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+          Hospital Administration
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="admin-dashboard.html" class="sidebar-link">
+          <span>&#9638;</span>
+          <span>Dashboard Overview</span>
+        </a>
+        <a href="admin-appointments.html" class="sidebar-link">
+          <span>&#128197;</span>
+          <span>All Appointments</span>
+        </a>
+        <a href="doctors-management.html" class="sidebar-link">
+          <span>&#9877;</span>
+          <span>Doctor Management</span>
+        </a>
+        <a href="availability.html" class="sidebar-link active">
+          <span>&#9200;</span>
+          <span>Doctor Availability</span>
+        </a>
+        <a href="index.html" class="sidebar-link" target="_blank">
+          <span>&#8599;</span>
+          <span>View Patient Site</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button type="button" id="adminLogoutBtn" class="btn btn-outline btn-sm btn-block" style="color: #f87171; border-color: rgba(248,113,113,0.3);">
+          Logout Staff
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1 style="font-size: 20px; font-weight: 700; color: var(--navy);">Doctor OPD Shift & Availability Scheduler</h1>
+          <p style="font-size: 13px; color: var(--text-muted);">Configure consultation working windows and automatically generate patient booking slots</p>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div id="availAlert"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 28px; align-items: start;">
+          <!-- Availability Configuration Form -->
+          <div class="card">
+            <h2 style="font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 6px;">Configure Doctor Shift</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+              Specify duty hours. The system automatically computes 30-minute booking intervals.
+            </p>
+
+            <form id="availabilityForm">
+              <div class="form-group">
+                <label for="availDoctor" class="form-label">Doctor *</label>
+                <select id="availDoctor" class="form-control" required>
+                  <option value="">Select Specialist...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="availDate" class="form-label">Duty Date *</label>
+                <input type="date" id="availDate" class="form-control" required>
+              </div>
+
+              <!-- Preset Shift Selector -->
+              <div class="form-group">
+                <label class="form-label">Shift Template Preset</label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-sm btn-secondary preset-btn" data-start="09:00" data-end="13:00">Morning (09:00 AM – 01:00 PM)</button>
+                  <button type="button" class="btn btn-sm btn-secondary preset-btn" data-start="16:00" data-end="19:00">Evening (04:00 PM – 07:00 PM)</button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="startTime" class="form-label">Shift Start Time *</label>
+                  <input type="time" id="startTime" class="form-control" value="09:00" required>
+                </div>
+                <div class="form-group">
+                  <label for="endTime" class="form-label">Shift End Time *</label>
+                  <input type="time" id="endTime" class="form-control" value="13:00" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="slotDuration" class="form-label">Slot Duration (Minutes)</label>
+                <input type="number" id="slotDuration" class="form-control" value="30" readonly style="background: var(--bg-subtle);">
+                <div class="form-help">Standard hospital policy: 30 minutes per outpatient visit.</div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 10px;">
+                Save Shift & Generate Slots
+              </button>
+            </form>
+          </div>
+
+          <!-- Generated Slots Preview Panel -->
+          <div class="card">
+            <h2 style="font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 6px;">Live Slot Map for Selected Date</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+              Shows current status of consultation slots in database for <span id="previewDocName" style="font-weight: 600; color: var(--navy);">selected doctor</span> on <span id="previewDateStr" class="tabular-nums" style="font-weight: 600;">--</span>
+            </p>
+
+            <div class="slot-legend" style="margin-bottom: 16px;">
+              <div class="legend-item">
+                <span class="legend-dot legend-available"></span>
+                <span>Open for Patient Booking</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-dot legend-booked"></span>
+                <span>Booked by Patient</span>
+              </div>
+            </div>
+
+            <div class="slots-grid" id="previewSlotsGrid">
+              <!-- Rendered slots -->
+            </div>
+
+            <div id="slotBookingList" style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <!-- Bookings list -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    document.getElementById('adminLogoutBtn').addEventListener('click', () => HospitalAPI.adminLogout());
+
+    const availAlert = document.getElementById('availAlert');
+    const doctorSelect = document.getElementById('availDoctor');
+    const dateInput = document.getElementById('availDate');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const previewSlotsGrid = document.getElementById('previewSlotsGrid');
+    const previewDocName = document.getElementById('previewDocName');
+    const previewDateStr = document.getElementById('previewDateStr');
+    const slotBookingList = document.getElementById('slotBookingList');
+
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
+
+    let allDoctors = [];
+
+    async function init() {
+      allDoctors = await HospitalAPI.getDoctors();
+      allDoctors.forEach(doc => {
+        const opt = document.createElement('option');
+        opt.value = doc.doctor_id;
+        opt.textContent = `${doc.doctor_name} (${doc.department})`;
+        doctorSelect.appendChild(opt);
+      });
+
+      // Query param check
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramDocId = urlParams.get('doctor_id');
+      if (paramDocId) {
+        doctorSelect.value = paramDocId;
+      } else if (allDoctors.length > 0) {
+        doctorSelect.value = allDoctors[0].doctor_id;
+      }
+
+      refreshSlotsPreview();
+    }
+
+    async function refreshSlotsPreview() {
+      const docId = doctorSelect.value;
+      const dateStr = dateInput.value;
+
+      if (!docId || !dateStr) {
+        previewSlotsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">Please select doctor and date</div>';
+        return;
+      }
+
+      const doc = allDoctors.find(d => Number(d.doctor_id) === Number(docId));
+      previewDocName.textContent = doc ? doc.doctor_name : 'Selected Doctor';
+      previewDateStr.textContent = dateStr;
+
+      try {
+        const slots = await HospitalAPI.getAvailability(docId, dateStr);
+        previewSlotsGrid.innerHTML = '';
+
+        if (!slots || slots.length === 0) {
+          previewSlotsGrid.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; grid-column: 1 / -1;">No slots configured for this date. Use form on left to create shifts.</div>';
+          slotBookingList.innerHTML = '';
+          return;
+        }
+
+        slots.forEach(slot => {
+          const div = document.createElement('div');
+          div.className = 'slot-btn' + (slot.available ? '' : ' booked');
+          div.textContent = slot.time + (slot.available ? ' (Open)' : ' (Booked)');
+          previewSlotsGrid.appendChild(div);
+        });
+
+        // Show bookings list
+        const apts = await HospitalAPI.getAppointments({ doctor_id: docId, date: dateStr });
+        const activeApts = apts.filter(a => a.status !== 'Cancelled');
+
+        if (activeApts.length > 0) {
+          slotBookingList.innerHTML = `
+            <div style="font-weight: 700; color: var(--navy); font-size: 14px; margin-bottom: 8px;">Active Patient Reservations (${activeApts.length}):</div>
+            ${activeApts.map(a => `
+              <div style="font-size: 13px; padding: 6px 0; border-bottom: 1px dashed var(--border); display: flex; justify-content: space-between;">
+                <span><strong class="tabular-nums">${a.appointment_time}</strong> - ${a.patient_name} (${a.appointment_id})</span>
+                <span class="badge badge-confirmed">${a.status}</span>
+              </div>
+            `).join('')}
+          `;
+        } else {
+          slotBookingList.innerHTML = `<div style="font-size: 13px; color: var(--text-muted);">No patients currently booked for this schedule. All open slots are available for patient reservation.</div>`;
+        }
+      } catch (err) {
+        previewSlotsGrid.innerHTML = `<div class="alert alert-error">Error loading slots</div>`;
+      }
+    }
+
+    // Shift presets
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        startTimeInput.value = btn.dataset.start;
+        endTimeInput.value = btn.dataset.end;
+      });
+    });
+
+    doctorSelect.addEventListener('change', refreshSlotsPreview);
+    dateInput.addEventListener('change', refreshSlotsPreview);
+
+    document.getElementById('availabilityForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const docId = doctorSelect.value;
+      const dateStr = dateInput.value;
+      const start = startTimeInput.value;
+      const end = endTimeInput.value;
+
+      try {
+        await HospitalAPI.getDoctors(); // ensure loaded
+        availAlert.innerHTML = `<div class="alert alert-success">Shift configured for ${dateStr} (${start} – ${end}). Slots are generated and open for booking.</div>`;
+        refreshSlotsPreview();
+      } catch (err) {
+        availAlert.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

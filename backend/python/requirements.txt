@@ -1,0 +1,5 @@
+# Python Backend Requirements
+# Note: app.py uses pure Python 3 Standard Library with zero external dependencies.
+# If you prefer running with Flask, install:
+Flask>=3.0.0
+flask-cors>=4.0.0

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Login - MedSchedule</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-icon">+</div>
+        <span>MedSchedule</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="doctors.html" class="nav-link">Find Doctors</a>
+        <a href="booking.html" class="nav-link">Book Appointment</a>
+      </nav>
+      <div class="header-actions">
+        <a href="register.html" class="btn btn-primary btn-sm">Create Account</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="auth-wrapper">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">Patient Portal Login</h1>
+          <p class="card-desc">Access your booked hospital appointments and scheduling history</p>
+        </div>
+
+        <div id="alertBox"></div>
+
+        <!-- Quick Demo Credentials Box -->
+        <div class="demo-creds">
+          <div class="demo-creds-title">Demo Patient Credentials:</div>
+          <div>Email: <strong class="tabular-nums">john.miller@example.com</strong></div>
+          <div>Password: <strong class="tabular-nums">patient123</strong></div>
+          <button type="button" id="fillDemoBtn" class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;">Auto-Fill Demo Credentials</button>
+        </div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="identifier" class="form-label">Email or Mobile Number</label>
+            <input type="text" id="identifier" class="form-control" placeholder="john.miller@example.com" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg" style="margin-top: 8px;">Login to Portal</button>
+        </form>
+
+        <div style="margin-top: 24px; text-align: center; font-size: 14px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <span>Don't have an account?</span>
+          <a href="register.html" style="font-weight: 600; margin-left: 4px;">Register New Patient</a>
+        </div>
+
+        <div style="margin-top: 12px; text-align: center; font-size: 13px;">
+          <a href="admin-login.html" style="color: var(--text-muted);">Hospital Staff & Management Login &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { HospitalAPI } from './js/api.js';
+
+    const loginForm = document.getElementById('loginForm');
+    const alertBox = document.getElementById('alertBox');
+    const fillDemoBtn = document.getElementById('fillDemoBtn');
+
+    fillDemoBtn.addEventListener('click', () => {
+      document.getElementById('identifier').value = 'john.miller@example.com';
+      document.getElementById('password').value = 'patient123';
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.innerHTML = '';
+      const identifier = document.getElementById('identifier').value.trim();
+      const password = document.getElementById('password').value;
+      const submitBtn = document.getElementById('submitBtn');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Verifying...';
+
+      try {
+        const res = await HospitalAPI.login(identifier, password);
+        alertBox.innerHTML = `<div class="alert alert-success">Login successful! Redirecting to appointments...</div>`;
+        setTimeout(() => {
+          window.location.href = 'appointments.html';
+        }, 600);
+      } catch (err) {
+        alertBox.innerHTML = `<div class="alert alert-error">${err.message}</div>`;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login to Portal';
+      }
+    });
+  </script>
+</body>
+</html>
